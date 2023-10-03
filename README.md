@@ -1,2 +1,2 @@
 # Deployment-Files
-Holds configuration files for deployment
+Holds any files revelent to deployment
