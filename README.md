@@ -1,2 +1,2 @@
 # Deployment-Files
-Holds the latest docker images
+Holds configuration files for deployment
