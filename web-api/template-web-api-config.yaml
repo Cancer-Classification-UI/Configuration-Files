@@ -16,28 +16,27 @@ spec:
         app: web-api
     spec: 
       containers:                             # List of containers within the pod
+
         - name: web-api-container             # Name of the container
           image: ghcr.io/cancer-classification-ui/ccu-web-api:latest # Registry Image
           ports:                              # Ports to expose (internally) in the container
             - containerPort: 443              # For AWS SSL? If not exposed gradio will not launch
-            - containerPort: <APP_PORT>       # Specific port for gradio html to be hosted at
+            - containerPort: <APP_PORT>             # Specific port for gradio html to be hosted at
           volumeMounts:                       # Volumes to mount internal to the container
-            - name: log-volume                # Reference name for the volume
-              mountPath: /usr/src/app/log.txt # Internal to the container mount path
             - name: env-volume                # Reference name for the volume
               mountPath: /usr/src/app/.env    # Internal to the container mount path
+              subPath: .env
           env:                                # Enviroment variables for pod
             - name: GRADIO_SERVER_NAME
               value: "0.0.0.0"
             - name: PYTHONUNBUFFERED
               value: "1"
+
+
       volumes:                                # External volumes (Will use reference names earlier)
-        - name: log-volume                    # Internal reference mount path
-          hostPath:                           # The external or host path to the desired file
-            path: ./web-api/log.txt           # Mounts the log to the service specific folder
         - name: env-volume                    # Internal reference mount path
-          hostPath:                           # The external or host path to the desired file
-            path: ./web-api/.web-api-env      # Mounts .env for port config and other secrets
+          configMap:                          # The external or host path to the desired file
+            name: web-api-env                 # Mounts .env for port config and other secrets
 
 ---
 # Service specific
@@ -49,10 +48,14 @@ spec:
   selector:
     app: web-api
   ports:
-    - protocol: TCP
+    - name: https
+      protocol: TCP
       port: 443              # Expose external port 443
       targetPort: 443        # Map to internal container port 443
-    - protocol: TCP
-      port: <APP_PORT>       # Exposes the external port for gradio to be hosted at
-      targetPort: <APP_PORT> # Exposes the internal port for gradio to be hosted at
-  type: LoadBalancer         # Exposes the service to the internet
+      nodePort: 30443
+    - name: http
+      protocol: TCP
+      port: <APP_PORT>            # Exposes the external port for gradio to be hosted at
+      targetPort: <APP_PORT>       # Exposes the internal port for gradio to be hosted at
+      nodePort: 300<APP_PORT_SMALL>       # Exposes the internal port for gradio to be hosted at
+  type: NodePort

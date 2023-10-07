@@ -1,0 +1,11 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 300<APP_PORT_SMALL>
+    hostPort: 300<APP_PORT_SMALL>
+    listenAddress: "0.0.0.0" # Optional, defaults to "0.0.0.0"
+    protocol: tcp # Optional, defaults to tcp
+- role: worker
+- role: worker
