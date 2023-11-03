@@ -1,0 +1,71 @@
+# Deployment specific
+apiVersion: apps/v1
+kind: Deployment           # Defines the type of (kind) Kubernetes resource 
+metadata:
+  name: login-api-deployment # Name of the deployment
+spec:
+  replicas: 1              # Number of pods for this deployment
+  selector:                # Selector to match pods controlled by this deployment
+    matchLabels:           # Labels which to match
+      app: login-api
+
+  # Pod specific
+  template:                                   # Template for pod specification
+    metadata:
+      labels:                                 # Label(s) for pods created from template
+        app: login-api
+    spec: 
+      containers:                             # List of containers within the pod
+
+        - name: login-api-container             # Name of the container
+          image: ghcr.io/cancer-classification-ui/ccu-login-api:latest # Registry Image
+          ports:                              # Ports to expose (internally) in the container
+            - containerPort: <APP_PORT>             # Specific port for gradio html to be hosted at
+          volumeMounts:                       # Volumes to mount internal to the container
+            - name: env-volume                # Reference name for the volume
+              mountPath: /usr/src/app/.env    # Internal to the container mount path
+              subPath: .env
+
+        - name: login-api-db-container
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: <MONGO_ROOT_USERNAME>
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: <MONGO_ROOT_PASSWORD>
+            - name: MONGO_INITDB_DATABASE
+              value: login-api-db
+          volumeMounts:
+            - name: preload-script-volume
+              mountPath: /docker-entrypoint-initdb.d/preload.sh
+              subPath: preload.sh
+            - name: preload-volume
+              mountPath: /preload
+
+      volumes:                                # External volumes (Will use reference names earlier)
+        - name: env-volume                    # Internal reference mount path
+          configMap:                          # The external or host path to the desired file
+            name: login-api-env                 # Mounts .env for port config and other secrets
+        - name: preload-script-volume
+          configMap:
+            name: login-api-db-preload-script
+        - name: preload-volume
+          configMap:
+            name: login-api-db-preload
+
+---
+# Service specific
+apiVersion: v1
+kind: Service
+metadata:
+  name: login-api-service      # Name of the service
+spec:
+  selector:
+    app: login-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: <APP_PORT>            # Exposes the external port for gradio to be hosted at
+      targetPort: <APP_PORT>       # Exposes the internal port for gradio to be hosted at

@@ -1,0 +1,5 @@
+APP_PORT=8084
+LOG_LEVEL=trace
+METHOD_LOGGING=false
+MONGODB_URI=mongodb://<user>:<password>@localhost:27017
+MONGODB_REDIRECT=27084

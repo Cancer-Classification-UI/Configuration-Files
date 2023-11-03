@@ -1,2 +1,5 @@
 web-api-config.yaml
+login-api-config.yaml
 kind-config.yaml
+.web-api-env
+.login-api-env
